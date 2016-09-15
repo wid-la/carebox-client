@@ -60,22 +60,31 @@ func main() {
 }
 
 func initViper() {
-	flag.StringP("project", "p", "", "Project name")
+	flag.StringP("name", "n", "", "Project name")
 	flag.StringP("branch", "b", "", "Branch name. Compose File Location")
-	flag.StringP("deployerUrl", "u", "", "Deployer URL")
-	flag.StringP("deployerToken", "t", "DEPLOY_TOKEN", "Deployer Token Variable Name")
-	flag.StringP("extra", "e", "", "set extra vars")
+	flag.StringP("deployerUrl", "d", "", "Deployer URL")
+	flag.StringP("deployerToken", "t", "", "Deployer Token")
+	flag.StringP("registryUrl", "u", "", "Registry URL")
+	flag.StringP("registryLogin", "l", "", "Registry Login")
+	flag.StringP("registryPassword", "p", "", "Registry Password")
+	flag.StringP("registryEmail", "e", "", "Registry Email")
+	flag.StringP("extra", "x", "", "set extra vars")
 	flag.Bool("showPayload", false, "Secret Feature...")
 	flag.Bool("insecure", false, "HTTP insecure connection")
 	flag.Bool("dryRun", false, "Test helper without calling the deployer")
 	flag.Lookup("showPayload").Hidden = true
+	flag.Lookup("dryRun").Hidden = true
 
 	flag.Parse()
 
-	viper.BindPFlag("PROJECT_NAME", flag.Lookup("project"))
+	viper.BindPFlag("PROJECT_NAME", flag.Lookup("name"))
 	viper.BindPFlag("BRANCH_NAME", flag.Lookup("branch"))
 	viper.BindPFlag("DEPLOY_URL", flag.Lookup("deployerUrl"))
-	viper.BindPFlag("DEPLOY_TOKEN_VAR", flag.Lookup("deployerToken"))
+	viper.BindPFlag("DEPLOY_TOKEN", flag.Lookup("deployerToken"))
+	viper.BindPFlag("REGISTRY_URL", flag.Lookup("registryUrl"))
+	viper.BindPFlag("REGISTRY_LOGIN", flag.Lookup("registryLogin"))
+	viper.BindPFlag("REGISTRY_PASSWORD", flag.Lookup("registryPassword"))
+	viper.BindPFlag("REGISTRY_EMAIL", flag.Lookup("registryEmail"))
 	viper.BindPFlag("EXTRA", flag.Lookup("extra"))
 	viper.BindPFlag("SHOW_PAYLOAD", flag.Lookup("showPayload"))
 	viper.BindPFlag("INSECURE", flag.Lookup("insecure"))
@@ -91,10 +100,8 @@ func checkConfig() {
 		dryRunConfig()
 	}
 
-	tokenVar := viper.GetString("DEPLOY_TOKEN_VAR")
-
 	cfg.deployerURL = viper.GetString("DEPLOY_URL")
-	cfg.deployerToken = viper.GetString(tokenVar)
+	cfg.deployerToken = viper.GetString("DEPLOY_TOKEN")
 	cfg.showPayload = viper.GetBool("SHOW_PAYLOAD")
 	cfg.insecure = viper.GetBool("INSECURE")
 	cfg.branch = viper.GetString("BRANCH_NAME")
