@@ -18,4 +18,4 @@ RUN go build -v \
 
 WORKDIR /home
 
-ENTRYPOINT ["carebox-client"]
+# ENTRYPOINT ["carebox-client"]
