@@ -3,7 +3,7 @@ This app generate the payload for Carebox.
 ### Usage
 
 ```
-docker run --rm -v $(pwd):/home carebox-client -d deployer.prod.com -t xxXxx \
+docker run --rm -v $(pwd):/home widla/carebox-client -d deployer.prod.com -t xxXxx \
   -u registry.docker.io -l login -p pwd -e login@test.com \
   -b develop -n nimbus -x CONT_NAME:nimbus42 --insecure
 ```

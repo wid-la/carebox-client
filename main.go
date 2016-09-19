@@ -41,6 +41,7 @@ type config struct {
 	showPayload   bool
 	insecure      bool
 	dryRun        bool
+	debug         bool
 	deployerURL   string
 	deployerToken string
 	branch        string // Compose File Path
@@ -71,9 +72,11 @@ func initViper() {
 	flag.StringP("extra", "x", "", "set extra vars")
 	flag.Bool("showPayload", false, "Secret Feature...")
 	flag.Bool("insecure", false, "HTTP insecure connection")
+	flag.Bool("debug", false, "Show debug info")
 	flag.Bool("dryRun", false, "Test helper without calling the deployer")
 	flag.Lookup("showPayload").Hidden = true
 	flag.Lookup("dryRun").Hidden = true
+	flag.Lookup("debug").Hidden = true
 
 	flag.Parse()
 
@@ -89,6 +92,7 @@ func initViper() {
 	viper.BindPFlag("SHOW_PAYLOAD", flag.Lookup("showPayload"))
 	viper.BindPFlag("INSECURE", flag.Lookup("insecure"))
 	viper.BindPFlag("DRY_RUN", flag.Lookup("dryRun"))
+	viper.BindPFlag("DEBUG", flag.Lookup("debug"))
 
 	viper.AutomaticEnv()
 }
@@ -104,6 +108,7 @@ func checkConfig() {
 	cfg.deployerToken = viper.GetString("DEPLOY_TOKEN")
 	cfg.showPayload = viper.GetBool("SHOW_PAYLOAD")
 	cfg.insecure = viper.GetBool("INSECURE")
+	cfg.debug = viper.GetBool("DEBUG")
 	cfg.branch = viper.GetString("BRANCH_NAME")
 
 	if cfg.deployerURL == "" {
@@ -160,6 +165,10 @@ func readComposeFile() {
 	data, err := ioutil.ReadFile(composePath)
 	if err != nil {
 		fmt.Println("Error Read : Docker Compose File")
+		if cfg.debug {
+			fmt.Printf("Compose Path : %s \n", composePath)
+			fmt.Println(err.Error())
+		}
 		os.Exit(-1)
 	}
 	fmt.Println("Succefuly read docker compose")
