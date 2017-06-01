@@ -57,7 +57,7 @@ func main() {
 	readComposeFile()
 	Deploy()
 
-	fmt.Println("\n-> Deploy in progres... ")
+	fmt.Println("\n-> Deploy in progress... ")
 }
 
 func initViper() {
@@ -215,6 +215,7 @@ func callService() *http.Response {
 	res, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("Error Calling Client : %v \n", err.Error())
+		fmt.Println(req)
 		os.Exit(-1)
 	}
 
@@ -235,4 +236,6 @@ func responseHandler(r *http.Response) {
 	}
 
 	fmt.Printf("\nResponse From Service : \n\n%s : %s \n", res.Type, res.ID)
+
+	fmt.Printf("Logs are available at [https://%s/job/%s/log].", cfg.deployerURL, res.ID)
 }
