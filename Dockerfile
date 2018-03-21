@@ -1,25 +1,22 @@
-FROM golang:1.7-wheezy
+FROM widla/golang-builder:latest as builder
+ADD .   /go/src/github.com/wid-la/carebox-client
+WORKDIR /go/src/github.com/wid-la/carebox-client
+RUN make deps install
 
-ENV APP_NAME="carebox-client"
-ENV SRC_PATH="/go/src/github.com/wid-la/carebox-client"
+FROM alpine:latest
+COPY --from=builder /go/bin/carebox-client /usr/bin/carebox-client
 
-RUN apt-get update && apt-get install -y apt-utils lsb-release \
-&& mkdir -p $SRC_PATH
-COPY . $SRC_PATH
-WORKDIR $SRC_PATH
+ENV GCLOUD_SDK_VERSION=194.0.0
 
-RUN go get github.com/spf13/viper \
-&& go get github.com/spf13/pflag
+RUN apk add --update --no-cache git openssh tar gzip ca-certificates python wget docker make
+RUN wget "https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${GCLOUD_SDK_VERSION}-linux-x86_64.tar.gz" \
+    && tar -xzf "google-cloud-sdk-${GCLOUD_SDK_VERSION}-linux-x86_64.tar.gz" \
+    && rm "google-cloud-sdk-${GCLOUD_SDK_VERSION}-linux-x86_64.tar.gz" \
+    && google-cloud-sdk/install.sh --usage-reporting=true --path-update=true --bash-completion=true --rc-path=/.bashrc \
+    && google-cloud-sdk/bin/gcloud config set --installation component_manager/disable_update_check true \
+    && rm -rf google-cloud-sdk/.install/.backup \
+    && rm -rf google-cloud-sdk/.install/.download \
+    && apk del wget \
+    && rm -rf /var/cache/apk/*
 
-RUN echo "deb http://packages.cloud.google.com/apt cloud-sdk-wheezy main" | tee /etc/apt/sources.list.d/google-cloud-sdk.list \
-&& curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
-&& apt-get update && apt-get install google-cloud-sdk
-
-
-RUN go build -v \
-&& cp $APP_NAME /usr/bin \
-&& rm -rf /go/src/*
-
-WORKDIR /home
-
-# ENTRYPOINT ["carebox-client"]
+ENV PATH=$PATH:/google-cloud-sdk/bin

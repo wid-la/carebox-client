@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: docker:latest
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: 17.06.0-ce 
+      - run: docker build --rm=false -t widla/carebox-client .
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: docker push widla/carebox-client

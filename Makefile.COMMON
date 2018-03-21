@@ -1,0 +1,60 @@
+NAME ?= $(error NAME not set in including Makefile)
+.DEFAULT_GOAL = run
+PKGS = $(go list ./... | grep -v "/vendor/")
+TAG=$(shell git rev-parse --short=8 HEAD)
+GCR_HOST=us.gcr.io
+GCP_PROJECT=wa-labs
+
+.PHONY: help
+help:
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.PHONY: deps
+deps: ## Install the project dependencies
+	dep ensure -v
+
+.PHONY: test
+test: ## Runs the tests
+	go test -v $(PKGS)
+
+.PHONY: lint
+lint: ## Runs the linter
+	gometalinter --vendor --fast --disable=gotype --disable=gas --disable=errcheck $(PKGS)
+
+.PHONY: install
+install: ## Installs the Go binary for development
+	@go version
+	GOGC=off go install -v
+
+.PHONY: run
+run: install ## Runs the Go program for development
+	source deploy/local/local.env && $(NAME)
+
+.PHONY: deploy-staging
+deploy-staging: ## Deploys the current commit to staging
+  carebox-client -d $(STAGING_SERVER) -t $(DEPLOY_TOKEN_STAGING) -u $(REGISTRY_URL) -l $(REGISTRY_LOGIN) -p $(gcloud auth print-access-token) -e $(REGISTRY_EMAIL) -b develop -n $(REPO_NAME) -x TAG:$CI_BUILD_REF_NAME
+
+
+.PHONY: deploy-prod
+deploy-prod: ## Deploys the current commit to prod
+	@gcloud container images list-tags $(GCR_HOST)/$(GCP_PROJECT)/$(NAME) | grep "$(TAG)" > /dev/null || (echo "Err: Could not find $(GCR_HOST)/$(GCP_PROJECT)/$(NAME):$(TAG)." && exit 1)
+
+.PHONY: ci-docker-auth
+ci-docker-auth: ## Authenticates through the gcloud CLI
+	echo $(GCLOUD_SERVICE_KEY) | base64 -d > $(HOME)/gcloud-service-key.json
+	gcloud auth activate-service-account --key-file $(HOME)/gcloud-service-key.json
+	gcloud config set project $(GCP_PROJECT)
+
+.PHONY: ci-docker-test
+ci-docker-test: ## Runs all the CI tests in Docker (test and lint)
+	gcloud docker -- build -f ./Dockerfile-test -t $(NAME)-test:$(TAG) .
+	gcloud docker -- run -i $(NAME)-test:$(TAG)
+
+.PHONY: ci-docker-build
+ci-docker-build: ## Builds the production Docker image
+	gcloud docker -- build -t $(GCR_HOST)/$(GCP_PROJECT)/$(NAME):$(TAG) -t $(GCR_HOST)/$(GCP_PROJECT)/$(NAME):latest .
+
+.PHONY: ci-docker-push
+ci-docker-push: ## Pushes the production Docker image
+	gcloud docker -- push $(GCR_HOST)/$(GCP_PROJECT)/$(NAME):$(TAG)
+	gcloud docker -- push $(GCR_HOST)/$(GCP_PROJECT)/$(NAME):latest
