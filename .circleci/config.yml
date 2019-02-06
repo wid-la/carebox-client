@@ -7,6 +7,6 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: 17.06.0-ce 
-      - run: docker build --rm=false -t widla/carebox-client .
+      - run: docker build --rm=false -t widla/carebox-client:v2 .
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run: docker push widla/carebox-client
+      - run: docker push widla/carebox-client:v2

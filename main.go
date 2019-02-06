@@ -9,10 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
-
-	flag "github.com/spf13/pflag"
-	"github.com/spf13/viper"
 )
 
 var cfg *config
@@ -51,8 +49,8 @@ func main() {
 	cfg = &config{}
 	payload = &deployerPayload{}
 
-	initViper()
-	checkConfig()
+	// initViper()
+	// checkConfig()
 	setupPayload()
 	readComposeFile()
 	Deploy()
@@ -61,55 +59,57 @@ func main() {
 }
 
 func initViper() {
-	flag.StringP("name", "n", "", "Project name")
-	flag.StringP("branch", "b", "", "Branch name. Compose File Location")
-	flag.StringP("deployerUrl", "d", "", "Deployer URL")
-	flag.StringP("deployerToken", "t", "", "Deployer Token")
-	flag.StringP("registryUrl", "u", "", "Registry URL")
-	flag.StringP("registryLogin", "l", "", "Registry Login")
-	flag.StringP("registryPassword", "p", "", "Registry Password")
-	flag.StringP("registryEmail", "e", "", "Registry Email")
-	flag.StringP("extra", "x", "", "set extra vars")
-	flag.Bool("showPayload", false, "Secret Feature...")
-	flag.Bool("insecure", false, "HTTP insecure connection")
-	flag.Bool("debug", false, "Show debug info")
-	flag.Bool("dryRun", false, "Test helper without calling the deployer")
-	flag.Lookup("showPayload").Hidden = true
-	flag.Lookup("dryRun").Hidden = true
-	flag.Lookup("debug").Hidden = true
+	// flag.StringP("name", "n", "", "Project name")
+	// flag.StringP("branch", "b", "", "Branch name. Compose File Location")
+	// flag.StringP("deployerUrl", "d", "", "Deployer URL")
+	// flag.StringP("deployerToken", "t", "", "Deployer Token")
+	// flag.StringP("registryUrl", "u", "", "Registry URL")
+	// flag.StringP("registryLogin", "l", "", "Registry Login")
+	// flag.StringP("registryPassword", "p", "", "Registry Password")
+	// flag.StringP("registryEmail", "e", "", "Registry Email")
+	// flag.StringP("extra", "x", "", "set extra vars")
+	// flag.Bool("showPayload", false, "Secret Feature...")
+	// flag.Bool("insecure", false, "HTTP insecure connection")
+	// flag.Bool("debug", false, "Show debug info")
+	// flag.Bool("dryRun", false, "Test helper without calling the deployer")
+	// flag.Lookup("showPayload").Hidden = true
+	// flag.Lookup("dryRun").Hidden = true
+	// flag.Lookup("debug").Hidden = true
 
-	flag.Parse()
+	// flag.Parse()
 
-	viper.BindPFlag("PROJECT_NAME", flag.Lookup("name"))
-	viper.BindPFlag("BRANCH_NAME", flag.Lookup("branch"))
-	viper.BindPFlag("DEPLOY_URL", flag.Lookup("deployerUrl"))
-	viper.BindPFlag("DEPLOY_TOKEN", flag.Lookup("deployerToken"))
-	viper.BindPFlag("REGISTRY_URL", flag.Lookup("registryUrl"))
-	viper.BindPFlag("REGISTRY_LOGIN", flag.Lookup("registryLogin"))
-	viper.BindPFlag("REGISTRY_PASSWORD", flag.Lookup("registryPassword"))
-	viper.BindPFlag("REGISTRY_EMAIL", flag.Lookup("registryEmail"))
-	viper.BindPFlag("EXTRA", flag.Lookup("extra"))
-	viper.BindPFlag("SHOW_PAYLOAD", flag.Lookup("showPayload"))
-	viper.BindPFlag("INSECURE", flag.Lookup("insecure"))
-	viper.BindPFlag("DRY_RUN", flag.Lookup("dryRun"))
-	viper.BindPFlag("DEBUG", flag.Lookup("debug"))
+	// viper.BindPFlag("PROJECT_NAME", flag.Lookup("name"))
+	// viper.BindPFlag("BRANCH_NAME", flag.Lookup("branch"))
+	// viper.BindPFlag("DEPLOY_URL", flag.Lookup("deployerUrl"))
+	// viper.BindPFlag("DEPLOY_TOKEN", flag.Lookup("deployerToken"))
+	// viper.BindPFlag("REGISTRY_URL", flag.Lookup("registryUrl"))
+	// viper.BindPFlag("REGISTRY_LOGIN", flag.Lookup("registryLogin"))
+	// viper.BindPFlag("REGISTRY_PASSWORD", flag.Lookup("registryPassword"))
+	// viper.BindPFlag("REGISTRY_EMAIL", flag.Lookup("registryEmail"))
+	// viper.BindPFlag("EXTRA", flag.Lookup("extra"))
+	// viper.BindPFlag("SHOW_PAYLOAD", flag.Lookup("showPayload"))
+	// viper.BindPFlag("INSECURE", flag.Lookup("insecure"))
+	// viper.BindPFlag("DRY_RUN", flag.Lookup("dryRun"))
+	// viper.BindPFlag("DEBUG", flag.Lookup("debug"))
 
-	viper.AutomaticEnv()
+	// viper.AutomaticEnv()
 }
 
 func checkConfig() {
-	cfg.dryRun = viper.GetBool("DRY_RUN")
+	branchName := os.Args[1]
+
+	cfg.dryRun = EnvBool("DRY_RUN", false)
 
 	if cfg.dryRun {
 		dryRunConfig()
 	}
 
-	cfg.deployerURL = viper.GetString("DEPLOY_URL")
-	cfg.deployerToken = viper.GetString("DEPLOY_TOKEN")
-	cfg.showPayload = viper.GetBool("SHOW_PAYLOAD")
-	cfg.insecure = viper.GetBool("INSECURE")
-	cfg.debug = viper.GetBool("DEBUG")
-	cfg.branch = viper.GetString("BRANCH_NAME")
+	cfg.deployerURL = EnvString("DEPLOY_URL", "")
+	cfg.deployerToken = EnvString("DEPLOY_TOKEN", "")
+	cfg.showPayload = EnvBool("SHOW_PAYLOAD", true)
+	cfg.insecure = EnvBool("INSECURE", false)
+	cfg.debug = EnvBool("DEBUG", false)
+	cfg.branch = branchName
 
 	if cfg.deployerURL == "" {
 		fmt.Printf("Missing Deployer URL\n")
@@ -122,27 +122,46 @@ func checkConfig() {
 }
 
 func dryRunConfig() {
-	viper.Set("PROJECT_NAME", "my-app")
-	viper.Set("DEPLOY_URL", "deployer.app.com")
-	viper.Set("REGISTRY_URL", "registry.test.com")
-	viper.Set("REGISTRY_LOGIN", "username")
-	viper.Set("REGISTRY_EMAIL", "contact@test.com")
-	viper.Set("DEPLOY_TOKEN", "xxxXXXxxx")
+	// viper.Set("PROJECT_NAME", "my-app")
+	// viper.Set("DEPLOY_URL", "deployer.app.com")
+	// viper.Set("REGISTRY_URL", "registry.test.com")
+	// viper.Set("REGISTRY_LOGIN", "username")
+	// viper.Set("REGISTRY_EMAIL", "contact@test.com")
+	// viper.Set("DEPLOY_TOKEN", "xxxXXXxxx")
 }
 
 func setupPayload() {
-	fmt.Println(">> Extra ", viper.GetString("EXTRA"))
-	payload.Project = viper.GetString("PROJECT_NAME")
-	payload.Registry.URL = viper.GetString("REGISTRY_URL")
-	payload.Registry.Login = viper.GetString("REGISTRY_LOGIN")
-	payload.Registry.Password = viper.GetString("REGISTRY_PASSWORD")
-	payload.Registry.Email = viper.GetString("REGISTRY_EMAIL")
-	payload.Extra = extraStringToMap(viper.GetString("EXTRA"))
+	fmt.Printf(">> Extra: [%s] \n", EnvString("EXTRA", "noExtra"))
+	payload.Project = EnvString("REPO_NAME", "")
+	payload.Registry.URL = EnvString("REGISTRY_URL", "")
+	payload.Registry.Login = EnvString("REGISTRY_LOGIN", "")
+	payload.Registry.Password = EnvString("REGISTRY_PASSWORD", "")
+	payload.Registry.Email = EnvString("REGISTRY_EMAIL", "")
+	payload.Extra = extraStringToMap(EnvString("EXTRA", ""))
+
+	payload.Extra["TAG"] = EnvString("TAG", "noTag")
+	payload.Extra["COMMIT"] = EnvString("CI_COMMIT_SHA", "noCommit")
+	payload.Extra["PROJECT"] = payload.Project
+	payload.Extra["DATABASE_NAME"] = EnvString("DATABASE_NAME", "noDbName")
+	payload.Extra["DATABASE_PASSWORD"] = EnvString("DATABASE_PASSWORD", "noDbPass")
+	payload.Extra["REGISTRY_NAMESPACE"] = EnvString("REGISTRY_NAMESPACE", "noRegistryNamespace")
 
 	if payload.Registry.URL == "" {
 		fmt.Printf("Missing Registry URL\n")
 		os.Exit(-1)
 	}
+}
+
+func extraVarsToMap(extra string) map[string]string {
+	m := make(map[string]string)
+
+	arr := strings.Split(extra, ",")
+
+	for _, val := range arr {
+		m[val] = EnvString(val, "empty")
+	}
+
+	return m
 }
 
 func extraStringToMap(extra string) map[string]string {
@@ -238,4 +257,23 @@ func responseHandler(r *http.Response) {
 	fmt.Printf("\nResponse From Service : \n\n%s : %s \n", res.Type, res.ID)
 
 	fmt.Printf("Logs are available at [https://%s/job/%s/log].", cfg.deployerURL, res.ID)
+}
+
+// EnvString ...
+func EnvString(env, fallback string) string {
+	e := os.Getenv(env)
+	if e == "" {
+		return fallback
+	}
+	return e
+}
+
+// EnvBool ...
+func EnvBool(env string, fallback bool) bool {
+	e := os.Getenv(env)
+	if e == "" {
+		return fallback
+	}
+	p, _ := strconv.ParseBool(e)
+	return p
 }
