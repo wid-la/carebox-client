@@ -32,12 +32,7 @@ run: install ## Runs the Go program for development
 
 .PHONY: deploy-staging
 deploy-staging: ## Deploys the current commit to staging
-  carebox-client -d $(STAGING_SERVER) -t $(DEPLOY_TOKEN_STAGING) -u $(REGISTRY_URL) -l $(REGISTRY_LOGIN) -p $(gcloud auth print-access-token) -e $(REGISTRY_EMAIL) -b develop -n $(REPO_NAME) -x TAG:$CI_BUILD_REF_NAME
-
-
-.PHONY: deploy-prod
-deploy-prod: ## Deploys the current commit to prod
-	@gcloud container images list-tags $(GCR_HOST)/$(GCP_PROJECT)/$(NAME) | grep "$(TAG)" > /dev/null || (echo "Err: Could not find $(GCR_HOST)/$(GCP_PROJECT)/$(NAME):$(TAG)." && exit 1)
+  carebox-client -d $(STAGING_SERVER) -t $(DEPLOY_TOKEN_STAGING) -u $(REGISTRY_URL) -l $(REGISTRY_LOGIN) -p $(gcloud auth print-access-token) -e $(REGISTRY_EMAIL) -b develop -n $(REPO_NAME) -x TAG:$(CI_BUILD_REF_NAME)
 
 .PHONY: ci-docker-auth
 ci-docker-auth: ## Authenticates through the gcloud CLI
