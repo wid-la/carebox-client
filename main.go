@@ -103,7 +103,7 @@ func checkConfig() {
 		dryRunConfig()
 	}
 
-	cfg.deployerURL = EnvString("DEPLOY_URL", "")
+	cfg.deployerURL = EnvString("DEPLOY_SERVER", "")
 	cfg.deployerToken = EnvString("DEPLOY_TOKEN", "")
 	cfg.showPayload = EnvBool("SHOW_PAYLOAD", true)
 	cfg.insecure = EnvBool("INSECURE", false)
