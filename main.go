@@ -97,6 +97,7 @@ func initViper() {
 
 func checkConfig() {
 	branchName := os.Args[1]
+	deployServer := os.Args[2]
 	cfg.dryRun = EnvBool("DRY_RUN", false)
 
 	argsWithProg := os.Args
@@ -109,17 +110,23 @@ func checkConfig() {
 		dryRunConfig()
 	}
 
-	cfg.deployerURL = EnvString("DEPLOY_SERVER", "")
+	cfg.deployerURL = deployServer //EnvString("DEPLOY_SERVER", "")
 	cfg.deployerToken = EnvString("DEPLOY_TOKEN", "")
 	cfg.showPayload = EnvBool("SHOW_PAYLOAD", true)
 	cfg.insecure = EnvBool("INSECURE", false)
 	cfg.debug = EnvBool("DEBUG", false)
 	cfg.branch = branchName
 
+	for _, e := range os.Environ() {
+		pair := strings.Split(e, "=")
+		fmt.Println(pair[0])
+	}
+
 	if cfg.deployerURL == "" {
 		fmt.Printf("Missing Deployer URL\n")
 		os.Exit(-1)
 	}
+	fmt.Printf("Deploy: %s \n", cfg.deployerURL)
 	if cfg.deployerToken == "" {
 		fmt.Printf("Missing Deployer Token\n")
 		os.Exit(-1)
