@@ -50,7 +50,7 @@ func main() {
 	payload = &deployerPayload{}
 
 	// initViper()
-	// checkConfig()
+	checkConfig()
 	setupPayload()
 	readComposeFile()
 	Deploy()
@@ -97,7 +97,6 @@ func initViper() {
 
 func checkConfig() {
 	branchName := os.Args[1]
-
 	cfg.dryRun = EnvBool("DRY_RUN", false)
 
 	if cfg.dryRun {
@@ -119,6 +118,8 @@ func checkConfig() {
 		fmt.Printf("Missing Deployer Token\n")
 		os.Exit(-1)
 	}
+
+	fmt.Printf(">> Branch: %s | Token: %s \n", cfg.branch, cfg.deployerToken)
 }
 
 func dryRunConfig() {
@@ -150,6 +151,8 @@ func setupPayload() {
 		fmt.Printf("Missing Registry URL\n")
 		os.Exit(-1)
 	}
+
+	fmt.Printf(">> Payload: %v \n", payload.Extra)
 }
 
 func extraVarsToMap(extra string) map[string]string {
