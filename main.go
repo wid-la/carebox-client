@@ -99,6 +99,12 @@ func checkConfig() {
 	branchName := os.Args[1]
 	cfg.dryRun = EnvBool("DRY_RUN", false)
 
+	argsWithProg := os.Args
+	argsWithoutProg := os.Args[1:]
+
+	fmt.Printf("Args: %v \n", argsWithProg)
+	fmt.Printf("Args: %v \n", argsWithoutProg)
+
 	if cfg.dryRun {
 		dryRunConfig()
 	}
