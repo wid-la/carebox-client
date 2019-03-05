@@ -151,7 +151,7 @@ func setupPayload() {
 	payload.Registry.Login = EnvString("REGISTRY_LOGIN", "")
 	payload.Registry.Password = EnvString("REGISTRY_PASSWORD", "")
 	payload.Registry.Email = EnvString("REGISTRY_EMAIL", "")
-	payload.Extra = extraStringToMap(EnvString("EXTRA", ""))
+	payload.Extra = extraVarsToMap(EnvString("EXTRA", ""))
 
 	payload.Extra["TAG"] = EnvString("TAG", "noTag")
 	payload.Extra["COMMIT"] = EnvString("CI_COMMIT_SHA", "noCommit")
