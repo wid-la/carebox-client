@@ -171,10 +171,11 @@ func setupPayload() {
 func extraVarsToMap(extra string) map[string]string {
 	m := make(map[string]string)
 
-	arr := strings.Split(extra, ",")
-
-	for _, val := range arr {
-		m[val] = EnvString(val, "empty")
+	if len(extra) > 0 {
+		arr := strings.Split(extra, ",")
+		for _, val := range arr {
+			m[val] = EnvString(val, "empty")
+		}
 	}
 
 	return m
