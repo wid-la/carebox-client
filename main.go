@@ -174,7 +174,8 @@ func extraVarsToMap(extra string) map[string]string {
 	if len(extra) > 0 {
 		arr := strings.Split(extra, ",")
 		for _, val := range arr {
-			m[val] = EnvString(val, "empty")
+			// m[val] = EnvString(val, "empty")
+			m[val] = EnvString(strings.TrimSpace(val), "empty")
 		}
 	}
 
